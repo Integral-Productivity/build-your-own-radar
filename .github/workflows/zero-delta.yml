@@ -1,0 +1,28 @@
+name: Zero-delta check
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  zero-delta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/thoughtworks/build-your-own-radar.git
+
+      - name: Fetch upstream master
+        run: git fetch upstream master
+
+      - name: Assert zero delta against upstream/master
+        # .github/ is excluded: it's this fork's own CI config, which by
+        # definition upstream doesn't have. Everything else must match
+        # upstream/master exactly - that's the zero-delta invariant this
+        # fork exists to hold (technology-adoption-governance issue #5).
+        run: git diff upstream/master --exit-code -- . ':!.github'
